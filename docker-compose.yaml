@@ -1,0 +1,94 @@
+
+services:
+
+  caddy:
+    build:
+      context: ./caddy-data
+      dockerfile: Dockerfile.caddy
+    container_name: caddy
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    ports:
+#      - "80:80"
+      - "443:443"
+    extra_hosts:                        # ← Added
+      - "host.docker.internal:host-gateway"
+    networks:
+      - caddy_net                             # ← Added
+    volumes:
+      - ./caddy-data/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy-data/data:/data
+      - ./caddy-data/config:/config
+
+
+
+  meshmonitor:
+    image: ghcr.io/yeraze/meshmonitor:latest
+    container_name: meshmonitor
+    restart: unless-stopped
+    ports:
+      - "1884:1884"
+      - "3001:3001"
+    volumes:
+      - ./meshmonitor-data:/data
+    networks:
+      - caddy_net                             # ← Added
+    environment:
+      #- MESHTASTIC_NODE_IP=192.168.3.71 # for MT
+      - ALLOWED_ORIGINS=*
+      - NODE_ENV=production
+      - TRUST_PROXY=true
+      - COOKIE_SECURE=true
+      - SESSION_SECRET=superlongsecret
+      - TZ=America/New_York
+
+  corescope:
+    image: ghcr.io/kpa-clawbot/corescope:latest
+    container_name: corescope
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./corescope-data:/app/data
+    networks:
+      - caddy_net
+
+
+  remoteterm:
+    # build: .
+    image: docker.io/jkingsman/remoteterm-meshcore:latest
+    container_name: remoteterm
+    environment:
+      MESHCORE_DATABASE_PATH: data/meshcore.db
+      # TCP
+      MESHCORE_TCP_HOST: 192.168.4.11
+      MESHCORE_TCP_PORT: 5000
+      # Logging
+      # MESHCORE_LOG_LEVEL: INFO
+    restart: unless-stopped
+    volumes:
+      - ./remoteterm-data:/app/data
+    networks:
+      - caddy_net
+
+
+  meshcore-ui:
+    build:
+      context: ./meshcore-ui
+      dockerfile: Dockerfile
+    container_name: meshcore-ui
+    restart: unless-stopped
+    ports:
+      - "8080:80" #exposes 8080, remove localhost tho
+    networks:
+      - caddy_net
+
+networks:
+  caddy_net:
+    external: true
+
+
+#    driver: local
+
