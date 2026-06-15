@@ -1,0 +1,36 @@
+mesh.domain.com {
+    tls {
+        dns he key
+   }
+    reverse_proxy meshmonitor:3001
+}
+
+scope.domain.com {
+    tls {
+        dns he key
+    }
+    reverse_proxy corescope:80
+}
+
+mct.domain.com {
+    tls {
+        dns he key
+    }
+    reverse_proxy remoteterm:8000
+}
+
+
+pymc.domain.com {
+    tls {
+        dns he key
+    }
+    reverse_proxy 192.168.3.137:8000
+}
+
+mcui.mchnet.com {
+    tls {
+        dns he key
+    }
+    reverse_proxy meshcore-ui:80
+}
+
