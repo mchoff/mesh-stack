@@ -13,6 +13,8 @@ ouside of docker stack:<br>
 - pyMC_Repeater by pyMC.dev<br>
 &nbsp&nbsp - pymc_modem (heltec wifi/tcp, shout out Yellowcooln rocks)<br><br>
 - mqtt2mqtt proxy (migrating mqtt to pymc mqtt)<br>
+&nbsp&nbsp Requires: paho-mqtt, amqtt, pynacl, passlib
+
 <br><br><br>
 All humbly running on an 8th gen i5 NUC lol<br>
 work in progress...  
