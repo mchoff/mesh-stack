@@ -21,8 +21,8 @@ CONFIG FILE (proxy.env)  ->  run:  python3 meshcore_mqtt_proxy.py --env proxy.en
 
   # --- your device connects in here ---
   LISTEN_PORT=1888
-  LISTEN_USER=        # blank = anyone can connect (no login)
-  LISTEN_PASS=
+  LISTEN_USER=matt        # blank = anyone can connect (no login)
+  LISTEN_PASS=matt
 
   # --- key, ONLY used by destinations with AUTH=token ---
   PUBLIC_KEY=<64 hex chars>      # your repeater public key
@@ -42,8 +42,7 @@ CONFIG FILE (proxy.env)  ->  run:  python3 meshcore_mqtt_proxy.py --env proxy.en
   DEST1_TLS=no
   DEST1_WEBSOCKET=no
   DEST1_AUTH=none                # none | userpass | token
-  # DEST1_USER=     
-  # DEST1_PASS=                         (only when AUTH=userpass)
+  # DEST1_USER=     DEST1_PASS=        (only when AUTH=userpass)
   # DEST1_AUD=                          (REQUIRED when AUTH=token)
   # DEST1_REWRITE_IATA=MCO:ORL          (optional: change the IATA in the topic)
   # DEST1_REWRITE_KEEP=yes              (optional: send BOTH original and rewritten)
@@ -53,7 +52,7 @@ CONFIG FILE (proxy.env)  ->  run:  python3 meshcore_mqtt_proxy.py --env proxy.en
 Requires: paho-mqtt, amqtt, pynacl, passlib
 """
 
-import argparse, asyncio, base64, hashlib, json, logging, os, ssl, sys, tempfile, time
+import argparse, asyncio, base64, hashlib, json, logging, os, socket, ssl, sys, tempfile, time
 
 try:
     import paho.mqtt.client as mqtt
@@ -170,6 +169,17 @@ class Dest:
         self.c.reconnect_delay_set(min_delay=1, max_delay=60)
         self.c.on_connect    = self._on_connect
         self.c.on_disconnect = self._on_disconnect
+
+
+        def _nodelay(client, userdata, sock):
+            try:
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            except (OSError, AttributeError):
+                pass
+        self.c.on_socket_open = _nodelay
+
+
+
 
         if d["tls"]:
             self.c.tls_set(cert_reqs=ssl.CERT_REQUIRED)
@@ -449,3 +459,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
